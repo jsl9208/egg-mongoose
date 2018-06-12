@@ -159,6 +159,19 @@ exports.mongoose = {
 };
 ```
 
+## Mocking mongoose
+
+Use [mockgoose](https://github.com/Mockgoose/Mockgoose) to mock mongodb & mongoose APIs.
+
+### Config
+
+```js
+// {app_root}/config/config.unittest.js
+exports.mongoose = {
+  mock: true,
+};
+```
+
 ## Questions & Suggestions
 
 Please open an issue [here](https://github.com/eggjs/egg-mongoose/issues).

@@ -1,5 +1,7 @@
 'use strict';
 
 module.exports = app => {
-  if (app.config.mongoose.app) require('./lib/mongoose')(app);
+  app.beforeStart(function* () {
+    if (app.config.mongoose.app) yield require('./lib/mongoose')(app);
+  });
 };

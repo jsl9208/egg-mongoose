@@ -255,4 +255,84 @@ describe('test/mongoose.test.js', () => {
       assert.fail('shall not succeeded');
     });
   });
+
+  describe('mocked', () => {
+    let app;
+    before(function* () {
+      mm.env('unittest');
+      app = mm.app({
+        baseDir: 'apps/mongoose',
+      });
+      yield app.ready();
+    });
+
+    after(function* () {
+      yield app.close();
+    });
+    afterEach(mm.restore);
+    afterEach(function* () {
+      yield app.model.Book.remove({});
+      yield app.model.User.remove({});
+    });
+
+    it('should connected to mocked mongodb', function* () {
+      assert(app.mongoose.connection.readyState === 1);
+      assert(app.mongoose.connection.db.databaseName.indexOf('mockgoose') > -1);
+    });
+
+    it('should has app model property', function* () {
+      assert(app.model);
+      assert(app.model.User.prototype instanceof app.mongoose.Model);
+      assert(app.model.user === undefined);
+      assert(app.model.Book.prototype instanceof app.mongoose.Model);
+      assert(app.model.book === undefined);
+      assert(app.model.Other === undefined);
+    });
+
+    it('should has app ctx property', function* () {
+      const ctx = app.mockContext();
+      assert(ctx.model);
+      assert(ctx.model.User.prototype instanceof app.mongoose.Model);
+      assert(ctx.model.user === undefined);
+      assert(ctx.model.Book.prototype instanceof app.mongoose.Model);
+      assert(ctx.model.book === undefined);
+      assert(ctx.model.Other === undefined);
+    });
+
+    it('should has sub model', function* () {
+      assert(app.model.Animal.prototype instanceof app.mongoose.Model);
+      assert(app.model.Animal.Dog.prototype instanceof app.mongoose.Model);
+      assert(app.model.Animal.Cat.prototype instanceof app.mongoose.Model);
+    });
+
+    it('should get data from create', function* () {
+      app.mockCsrf();
+
+      yield request(app.callback())
+        .post('/users')
+        .send({ name: 'mongoose' })
+        .expect(200);
+
+      const res = yield request(app.callback()).get('/users');
+      assert(res.body[0].name === 'mongoose');
+    });
+
+    it('should get data from create with capitalized model file name', function* () {
+      app.mockCsrf();
+
+      yield request(app.callback())
+        .post('/books')
+        .send({ name: 'mongoose' })
+        .expect(200);
+
+      const res = yield request(app.callback()).get('/books');
+      assert(res.body[0].name === 'mongoose');
+    });
+
+    it('should load promise', function* () {
+      const query = app.model.User.findOne({});
+      assert.equal(query.exec().constructor, Promise);
+    });
+  });
 });
+
